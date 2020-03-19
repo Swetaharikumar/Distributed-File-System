@@ -52,14 +52,14 @@ def register():
     storageServerInfo = request.get_json()
 
     for item in constant.storageServers:
-        if storageServerInfo['storage_ip'] == item['storage_ip'] and storageServerInfo['client_port'] == item['client_port'] and storageServerInfo['command_port'] == item['storage_ip']:
+        if storageServerInfo['storage_ip'] == item['storage_ip'] and storageServerInfo['client_port'] == item['client_port'] \
+                and storageServerInfo['command_port'] == item['storage_ip']:
+            constant.exceptionReturn["exception_type"] = "IllegalStateException"
+            constant.exceptionReturn["exception_type"] = "This storage client already registered."
 
-
-
-
-
-
-
+            content =  json.dumps(constant.exceptionReturn)
+            response = make_response(content, 409)
+            return response
 
 
 if __name__ == "__main__":

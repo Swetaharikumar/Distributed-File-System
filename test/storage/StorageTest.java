@@ -29,7 +29,6 @@ abstract class StorageTest extends Test
 {
     /** Storage server being tested. */
     private Process                 server = null;
-    protected HttpClient            client;
     public static final int         CLIENT_PORT = 7000;
     public static final int         COMMAND_PORT = 7001;
 
@@ -123,8 +122,6 @@ abstract class StorageTest extends Test
                 " Please change the port number in Config.java!");
         }
 
-        this.client = HttpClient.newHttpClient();
-        
         // start a storage server according to the command line specified in Config.java
         if (CLIENT_PORT != Integer.parseInt(splits[splits.length - 4])) {
             throw new TestFailed("StorgeServer0 Storage Port should be " + CLIENT_PORT + " not " + splits[splits.length - 4] +
@@ -176,7 +173,7 @@ abstract class StorageTest extends Test
     protected void clean()
     {
         if (server != null) {
-            server.destroy();
+            kill(server.toHandle());
             // Wait for the storage server to stop.
             try {
                 server.waitFor();
@@ -201,10 +198,16 @@ abstract class StorageTest extends Test
 
         HttpResponse<String> response;
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:" + port + method))
+                .setHeader("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
                 .build();
 
-        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         return response;
+    }
+
+    protected void kill(ProcessHandle handle) {
+        handle.descendants().forEach(this::kill);
+        handle.destroy();
     }
 }

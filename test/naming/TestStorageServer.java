@@ -106,6 +106,7 @@ public class TestStorageServer
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://127.0.0.1:" + naming_register_port + "/register"))
+                .setHeader("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(registerRequest)))
                 .build();
 

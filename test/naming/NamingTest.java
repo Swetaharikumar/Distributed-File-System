@@ -31,7 +31,6 @@ abstract class NamingTest extends Test
     /** Naming server under test. */
     private Process                       server = null;
 
-    protected HttpClient                  client;
     protected Gson                        gson;
 
     public static final int               SERVICE_PORT = 8080;
@@ -43,10 +42,11 @@ abstract class NamingTest extends Test
 
         HttpResponse<String> response;
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:" + port + method))
+                .setHeader("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
                 .build();
 
-        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         return response;
     }
 
@@ -75,8 +75,6 @@ abstract class NamingTest extends Test
         {
             throw new TestFailed("unable to start naming server");
         }
-
-        client = HttpClient.newHttpClient();
 
         // Attempt to make the connection.
         while (true)
@@ -116,7 +114,7 @@ abstract class NamingTest extends Test
     {
         if(server != null)
         {
-            server.destroy();
+            kill(server.toHandle());
 
             // Wait for the naming server to stop.
             try
@@ -129,4 +127,9 @@ abstract class NamingTest extends Test
         }
     }
 
+    protected void kill(ProcessHandle handle)
+    {
+        handle.descendants().forEach(this::kill);
+        handle.destroy();
+    }
 }

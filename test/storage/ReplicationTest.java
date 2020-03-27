@@ -454,7 +454,7 @@ public class ReplicationTest extends StorageTest
         super.clean();
         
         if (second_server != null) {
-            second_server.destroy();
+            kill(second_server.toHandle());
             // Wait for the naming server to stop.
             try {
                 second_server.waitFor();

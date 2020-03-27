@@ -14,7 +14,7 @@ def startNamingService():
 
 
 def make_response(content, status_code):
-    response = manager.response_class(
+    response = namingService.response_class(
         response=content,
         status=status_code,
         mimetype='application/json'
@@ -24,7 +24,6 @@ def make_response(content, status_code):
 
 @namingService.route('/is_valid_path', methods=['POST'])
 def isValidPath():
-
     pathJson = request.get_json()
     path = pathJson["path"]
 

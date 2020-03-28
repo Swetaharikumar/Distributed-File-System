@@ -127,7 +127,7 @@ def register():
                           "command_port" : ssReq['command_port'],
                           "files" : []}
 
-    deleteFiles = {"files" : []}
+    deleteFiles = {'files' : []}
 
     for item in constant.storageServers:
         if ssReq['storage_ip'] == item['storage_ip'] and ssReq['client_port'] == item['client_port'] \
@@ -139,7 +139,6 @@ def register():
             response = make_response(content, 409)
             return response
 
-
     for reqFile in ssReq['files']:
         if reqFile == '/':
             continue
@@ -150,7 +149,6 @@ def register():
         else:
             fs.insert(reqFile)
             storageServerEntry['files'].append(reqFile)
-
 
     # For now simple append, later look at files and send delete command for duplicates
     constant.storageServers.append(storageServerEntry)

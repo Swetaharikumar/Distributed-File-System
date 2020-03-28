@@ -24,17 +24,14 @@ class FileSystem(object):
         for i in range(1, len(array)):
             name = array[i]
             if name not in cur.map:
-                if i == len(array)-1:
-                    cur.map[name] = File(name)
-                    cur.isFile = False
-                else:
-                    return False
+                cur.map[name] = File(name)
+                cur.isFile = False
+
             cur = cur.map[name]
         return True
 
     # Returns the File object
     def get(self, path):
-        print("in get")
         cur = self.root
         if (path == "/" or path == "//"):
             return cur

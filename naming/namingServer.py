@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from threading import Thread
 import json
 import sys
-from FileSystemTree import File, FileSystem
+from file_system_tree import File, FileSystem
 
 namingService = Flask('namingServer')  # Creating the Service web server
 namingRegister = Flask('namingRegister')  # Creating the Registration web server

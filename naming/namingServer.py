@@ -242,8 +242,8 @@ def register():
     # For now simple append, later look at files and send delete command for duplicates
     constant.storageServers.append(storageServerEntry)
     content = json.dumps(deleteFiles)
-    response = make_register_response(content, 200);
-    return response;
+    response = make_register_response(content, 200)
+    return response
 
 
 

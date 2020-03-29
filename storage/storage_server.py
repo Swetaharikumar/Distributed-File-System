@@ -9,6 +9,7 @@ import os
 import shutil
 import logging
 import base64
+import errno
 
 clientService = Flask('clientServer')  # Creating the client servcie web server
 commandService = Flask('commandServer')  # Creating the command web server
@@ -64,10 +65,8 @@ def prune(path):
         for name in dirs:
             prune_path = os.path.join(root, name)
             if os.path.isdir(prune_path) and not os.listdir(prune_path):
-                logging.info(prune_path)
-                # os.rmdir(name)
+                # logging.info(prune_path)
                 shutil.rmtree(prune_path)
-            # file_paths.append(os.path.join(root, name))
 
 
 
@@ -75,10 +74,8 @@ def remove_files(filepaths, storagePath):
     for fp in filepaths:
         path = storagePath + fp
         if os.path.isfile(path):
-            logging.info(path)
             os.remove(path)
         elif os.path.isdir(path):
-            logging.info(path)
             shutil.rmtree(path)
 
 
@@ -109,6 +106,59 @@ def isValidPathHelper (path):
 def storageDelete():
     pathJson = request.get_json()
     path = pathJson["path"]
+    storage_path = sys.argv[4]
+
+    if not isValidPathHelper(path):
+        constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+        constant.exceptionReturn["exception_info"] = "[storage_delete] given path is invalid"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_command_response(content, 404)
+        return response
+
+    filepath = storage_path + path
+    if path == "/" or not (os.path.isfile(filepath) or os.path.isdir(filepath)):
+        constant.boolReturn["success"] = False
+        response = make_command_response(json.dumps(constant.boolReturn), 200)
+        return response
+
+
+    filepaths = [path]
+    remove_files(filepaths, storage_path)
+    constant.boolReturn["success"] = True
+    response = make_command_response(json.dumps(constant.boolReturn), 200)
+    return response
+
+@commandService.route('/storage_create', methods=['POST'])
+def storageCreate():
+    pathJson = request.get_json()
+    path = pathJson["path"]
+    storagePath = sys.argv[4]
+
+    if not isValidPathHelper(path):
+        constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+        constant.exceptionReturn["exception_info"] = "[storage_create] given path is invalid"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_command_response(content, 404)
+        return response
+
+    filepath = storagePath + path
+    if path == "/" or os.path.isfile(filepath) or os.path.isdir(filepath):
+        constant.boolReturn["success"] = False
+        response = make_command_response(json.dumps(constant.boolReturn), 200)
+        return response
+
+    try:
+        path_arr = filepath.rsplit('/', 1)
+        dir_path = path_arr[0]
+        os.makedirs(dir_path, exist_ok=True)
+        f = open(filepath, 'w+')
+        f.close()
+        constant.boolReturn["success"] = True
+    except:
+        constant.boolReturn["success"] = False
+
+    response = make_command_response(json.dumps(constant.boolReturn), 200)
+    return response
 
 
 @clientService.route('/storage_size', methods=['POST'])
@@ -235,8 +285,6 @@ def storageWrite():
         response = make_client_response(content, 404)
 
     return response
-
-
 
 
 

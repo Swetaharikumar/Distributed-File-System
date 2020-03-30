@@ -30,8 +30,7 @@ public class Config {
      * It will also register it self through the naming server's REGISTRATION port 8090.
      * This storage server will store all its files under the directory '/tmp/dist-systems-0'
     */
-    public static final String startStorage0 = String.format("java -cp .%sgson-2.8.6.jar " +
-            "storage.StorageServer 7000 7001 8090 /tmp/dist-systems-0", separator);
+    public static final String startStorage0 = String.format("python3 storage/storage_server.py 7000 7001 8090 /Users/tejasri/Desktop/14736/Distributed-File-System/tmp/storage0", separator);
 
     /**
      * Command to start the second storage server.
@@ -42,6 +41,5 @@ public class Config {
      * It will also register it self through the naming server's REGISTRATION port 8090.
      * This storage server will store all its files under the directory '/tmp/dist-systems-1'
     */
-    public static final String startStorage1 = String.format("java -cp .%sgson-2.8.6.jar " +
-            "storage.StorageServer 7010 7011 8090 /tmp/dist-systems-1", separator);
+    public static final String startStorage1 = String.format("python3 storage/storage_server.py 7010 7011 8090 /Users/tejasri//Desktop/14736/Distributed-File-System/tmp/storage1", separator);
 }

@@ -29,8 +29,6 @@ abstract class StorageTest extends Test
 {
     /** Storage server being tested. */
     private Process                 server = null;
-    public static final int         CLIENT_PORT = 7000;
-    public static final int         COMMAND_PORT = 7001;
 
     /** Files to be created in the storage server root directory. */
     private String[][]              test_files;
@@ -117,20 +115,7 @@ abstract class StorageTest extends Test
         this.naming_server.expectFiles(expect_files);
         this.naming_server.deleteFiles(delete_files);
         this.naming_stub = naming_server.stub();
-        if (this.naming_stub.server_port != Integer.parseInt(splits[splits.length - 2])) {
-            throw new TestFailed("NamingServer Registration Port should be " + this.naming_stub.server_port + " not " + splits[splits.length - 2] +
-                " Please change the port number in Config.java!");
-        }
 
-        // start a storage server according to the command line specified in Config.java
-        if (CLIENT_PORT != Integer.parseInt(splits[splits.length - 4])) {
-            throw new TestFailed("StorgeServer0 Storage Port should be " + CLIENT_PORT + " not " + splits[splits.length - 4] +
-            " Please change the port number in Config.java!");
-        }
-        if (COMMAND_PORT != Integer.parseInt(splits[splits.length - 3])) {
-            throw new TestFailed("StorgeServer0 Command Port should be " + COMMAND_PORT + " not " + splits[splits.length - 3] +
-            " Please change the port number in Config.java!");
-        }
         Socket storage_socket;
         Socket registration_socket;
         try {
@@ -144,9 +129,9 @@ abstract class StorageTest extends Test
         while (true) {
             try {
                 storage_socket = new Socket();
-                storage_socket.connect(new InetSocketAddress("127.0.0.1", CLIENT_PORT));
+                storage_socket.connect(new InetSocketAddress("127.0.0.1", Config.STORAGE_PORTS[0]));
                 registration_socket = new Socket();
-                registration_socket.connect(new InetSocketAddress("127.0.0.1", COMMAND_PORT));
+                registration_socket.connect(new InetSocketAddress("127.0.0.1", Config.COMMAND_PORTS[0]));
                 break;
             }
             catch (IOException e) {

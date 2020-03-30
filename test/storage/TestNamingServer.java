@@ -11,6 +11,7 @@ import jsonhelper.*;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpExchange;
+import test.Config;
 import test.common.Path;
 import test.util.Test;
 import test.util.TestFailed;
@@ -36,8 +37,6 @@ public class TestNamingServer
     private Path[]              delete_files = null;
     /** Naming server IP address. */
     private final static String NAMING_IP = "127.0.0.1";
-    private final static int REGISTRATION_PORT = 8090;
-    private final static int SERVICE_PORT = 8080;
     /** Naming server registration interface skeleton. */
     private HttpServer          registration_skeleton;
     /** Naming server service interface skeleton. */
@@ -58,10 +57,10 @@ public class TestNamingServer
     TestNamingServer(Test test) throws IOException
     {
         this.test = test;
-        this.registration_skeleton = HttpServer.create(new InetSocketAddress(REGISTRATION_PORT), 0);
+        this.registration_skeleton = HttpServer.create(new InetSocketAddress(Config.REGISTRATION_PORT), 0);
         this.registration_skeleton.setExecutor(Executors.newCachedThreadPool());
 
-        this.service_skeleton = HttpServer.create(new InetSocketAddress(SERVICE_PORT), 0);
+        this.service_skeleton = HttpServer.create(new InetSocketAddress(Config.SERVICE_PORT), 0);
         this.service_skeleton.setExecutor(Executors.newCachedThreadPool());
 
         this.gson = new Gson();
@@ -112,7 +111,7 @@ public class TestNamingServer
      */
     ServerInfo stub()
     {
-        return new ServerInfo(NAMING_IP, REGISTRATION_PORT);
+        return new ServerInfo(NAMING_IP, Config.REGISTRATION_PORT);
     }
 
     /** Starts the test naming server.

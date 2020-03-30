@@ -47,9 +47,6 @@ public class ReplicationTest extends StorageTest
     /** Prerequisites. */
     public static final Class[] prerequisites = new Class[] {AccessTest.class};
 
-    public static final int     SECOND_CLIENT_PORT = 7010;
-    public static final int     SECOND_COMMAND_PORT = 7011;
-
     // root directory of the second storage server.
     private String              second_root_dir = null;
     /** Second temporary directory for the second (source) storage server. */
@@ -396,15 +393,6 @@ public class ReplicationTest extends StorageTest
         naming_server.expectFiles(new Path[] {replace_path, create_path});
         naming_server.deleteFiles(null);
 
-        // start the second storage server according to the command line specified in Config.java
-        if (SECOND_CLIENT_PORT != Integer.parseInt(splits[splits.length - 4])) {
-            throw new TestFailed("StorgeServer0 Storage Port should be " + SECOND_CLIENT_PORT + " not " + splits[splits.length - 4] +
-                " Please change the port number in Config.java!");
-        }
-        if (SECOND_COMMAND_PORT != Integer.parseInt(splits[splits.length - 3])) {
-            throw new TestFailed("StorgeServer0 Command Port should be " + SECOND_COMMAND_PORT + " not " + splits[splits.length - 3] +
-                " Please change the port number in Config.java!");
-        }
         Socket storage_socket;
         Socket registration_socket;
         try {
@@ -418,9 +406,9 @@ public class ReplicationTest extends StorageTest
         while (true) {
             try {
                 storage_socket = new Socket();
-                storage_socket.connect(new InetSocketAddress("127.0.0.1", SECOND_CLIENT_PORT));
+                storage_socket.connect(new InetSocketAddress("127.0.0.1", Config.STORAGE_PORTS[1]));
                 registration_socket = new Socket();
-                registration_socket.connect(new InetSocketAddress("127.0.0.1", SECOND_COMMAND_PORT));
+                registration_socket.connect(new InetSocketAddress("127.0.0.1",Config.COMMAND_PORTS[1]));
                 break;
             }
             catch (IOException e) {

@@ -33,8 +33,8 @@ abstract class NamingTest extends Test
 
     protected Gson                        gson;
 
-    public static final int               SERVICE_PORT = 8080;
-    public static final int               REGISTRATION_PORT = 8090;
+    public static final int               SERVICE_PORT = Config.SERVICE_PORT;
+    public static final int               REGISTRATION_PORT = Config.REGISTRATION_PORT;
 
     protected HttpResponse<String> getResponse(String method,
                                                int port,

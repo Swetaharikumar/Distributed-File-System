@@ -1,5 +1,6 @@
 # Global constants file
 from typing import Dict, Any
+import queue
 
 boolReturn = {"success": None}
 exceptionReturn = {"exception_type": None, "exception_info": None}
@@ -14,6 +15,9 @@ storageServers = []
 
 # Nested dictionary
 filesDict: Dict[Any, Any] = {}
+
+# queue of lock requests
+q = queue.Queue()
 
 
 

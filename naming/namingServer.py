@@ -6,6 +6,8 @@ import sys
 from file_system_tree import File, FileSystem
 import requests
 import logging
+from werkzeug import Local
+from random import random
 
 namingService = Flask('namingServer')  # Creating the Service web server
 namingRegister = Flask('namingRegister')  # Creating the Registration web server
@@ -13,7 +15,7 @@ fs = FileSystem()
 
 def startNamingService():
     # print("Starting naming service")
-    namingService.run(host='localhost', port=sys.argv[1])
+    namingService.run(host='localhost', port=sys.argv[1], threaded=True)
 
 def startNamingRegister():
     # print("Starting naming Registration")
@@ -222,6 +224,77 @@ def createDir():
     response = make_response(content, 200)
     return response
 
+@namingService.route('/lock', methods=['POST'])
+def lockPath():
+    pathJson = request.get_json()
+    path = pathJson["path"]
+
+    if not isValidPathHelper(path):
+        constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+        constant.exceptionReturn["exception_info"] = "Given path is invalid(isValidPath failed)"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_response(content, 404)
+        return response
+
+    node  = fs.get(path)
+    if not node:
+        constant.exceptionReturn["exception_type"] = "FileNotFoundException"
+        constant.exceptionReturn["exception_info"] = "path cannot be found"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_response(content, 404)
+        return response
+
+    timestamp = random()
+    constant.q.put(timestamp) 
+    exclusive = pathJson["exclusive"]
+    success = fs.lockPath(path, exclusive, timestamp)
+    
+    
+    if success == False:
+        logging.info("UNABLE TO LOCK")
+
+    if success == True:
+        response = make_response(None, 200)
+        return response
+
+    constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+    constant.exceptionReturn["exception_info"] = "Lock failed because of conflict"
+    content =  json.dumps(constant.exceptionReturn)
+    response = make_response(content, 404)
+    return response
+
+
+@namingService.route('/unlock', methods=['POST'])
+def unlockPath():
+    pathJson = request.get_json()
+    path = pathJson["path"]
+
+    if not isValidPathHelper(path):
+        constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+        constant.exceptionReturn["exception_info"] = "Given path is invalid(isValidPath failed)"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_response(content, 404)
+        return response
+
+    node  = fs.get(path)
+    if not node:
+        constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+        constant.exceptionReturn["exception_info"] = "Bad path given"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_response(content, 404)
+        return response
+
+    exclusive = pathJson["exclusive"]
+    success = fs.unlockPath(path, exclusive)
+    if success == True:
+        response = make_response(None, 200)
+        return response
+
+    constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+    constant.exceptionReturn["exception_info"] = "Unlock failed because of conflict"
+    content =  json.dumps(constant.exceptionReturn)
+    response = make_response(content, 404)
+    return response
 
 """
 def createHelper(path, createDir = None):

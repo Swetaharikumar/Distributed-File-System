@@ -1,5 +1,8 @@
 from collections import defaultdict
-
+import logging
+import sys
+import consts as constant
+sys.stdout = open("debugFileTree.txt", 'w')
 
 class File(object):
     def __init__(self, name, ip=None, port=None):
@@ -9,6 +12,8 @@ class File(object):
         self.value = -1
         self.ip = ip
         self.port = port
+        self.locked = False
+        self.exclusive = False
 
     def to_string(self):
         out = ""
@@ -73,3 +78,63 @@ class FileSystem(object):
                 return None
             cur = cur.map[name]
         return cur
+
+    def lockPath(self, path, exclusive, timestamp):
+        cur = self.root
+        # if (path == "/" or path == "//" or path == ''):
+        while timestamp != constant.q.queue[0]:
+            continue
+        while cur.exclusive == True:
+            continue
+        while cur.locked == True and exclusive == True and (path == "/" or path == "//" or path == ''):
+           continue
+
+        logging.info("locked" + cur.name)
+        cur.locked = True
+        cur.exclusive = False
+        if (path == "/" or path == "//" or path == ''):
+            cur.exclusive = exclusive
+            constant.q.get()
+            return True
+
+        array = path.split("/")
+        for i in range(0, len(array)):
+            name = array[i]
+            if name == '':
+                continue
+            cur = cur.map[name]
+            if cur.exclusive == True:
+                return False
+            logging.info("locked" + cur.name)
+            cur.locked = True
+            cur.exclusive = False
+        cur.exclusive = exclusive
+        constant.q.get()
+        return True
+
+
+    def unlockPath(self, path, exclusive):
+        cur = self.root
+
+        if (path == "/" or path == "//"):
+            # if cur.exclusive != exclusive:
+            #     return False
+            logging.info("unlocked" + cur.name)
+            cur.locked = False
+            cur.exclusive = False
+
+        cur.locked = False
+        cur.exclusive = False
+
+        array = path.split("/")
+        for i in range(0, len(array)):
+            name = array[i]
+            if name == '':
+                continue
+            cur = cur.map[name]
+            logging.info("unlocked" + cur.name)
+            cur.locked = False
+            cur.exclusive = False
+
+        return True 
+            

@@ -5,13 +5,14 @@ import consts as constant
 sys.stdout = open("debugFileTree.txt", 'w')
 
 class File(object):
-    def __init__(self, name, ip=None, port=None):
+    def __init__(self, name, ip=None, clientport=None, commandport=None):
         self.map = defaultdict(File)
         self.name = name
         self.isFile = True
         self.value = -1
         self.ip = ip
-        self.port = port
+        self.clientport = clientport
+        self.commandport = commandport
         self.locked = False
         self.exclusive = False
 
@@ -45,7 +46,7 @@ class FileSystem(object):
         return True
 
 
-    def insert(self, path, ip=None, port=None):
+    def insert(self, path, ip=None, clientport=None, commandport = None):
         """
         :type path: str
         :rtype: void
@@ -57,7 +58,7 @@ class FileSystem(object):
             if name == '':
                 continue
             if name not in cur.map:
-                cur.map[name] = File(name, ip, port)
+                cur.map[name] = File(name, ip, clientport, commandport)
                 cur.isFile = False
 
             cur = cur.map[name]
@@ -78,6 +79,21 @@ class FileSystem(object):
                 return None
             cur = cur.map[name]
         return cur
+
+    def returnFileOwner(self, path):
+        cur = self.root
+        if (path == "/" or path == "//" or path == ''):
+            return cur.ip,cur.port
+
+        array = path.split("/")
+        for i in range(0, len(array)):
+            name = array[i]
+            if name == '':
+                continue
+            if name not in cur.map:
+                return None
+            cur = cur.map[name]
+        return cur.ip, cur.clientport, cur.commandport
 
     def lockPath(self, path, exclusive, timestamp):
         cur = self.root
@@ -103,8 +119,8 @@ class FileSystem(object):
             if name == '':
                 continue
             cur = cur.map[name]
-            if cur.exclusive == True:
-                return False
+            # if cur.exclusive == True:
+            #     return False
             logging.info("locked" + cur.name)
             cur.locked = True
             cur.exclusive = False

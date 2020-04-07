@@ -11,14 +11,14 @@ exceptionReturn = {"exception_type": None, "exception_info": None}
 
 # List of dictionaries
 storageServers = []
-
-
 # Nested dictionary
 filesDict: Dict[Any, Any] = {}
-
 # queue of lock requests
 q = queue.Queue()
 
+# Maintains access count for shared locks
+AccessCount = dict()
+ReplicatedFiles = dict()
 
 
 

@@ -14,16 +14,13 @@ import errno
 clientService = Flask('clientServer')  # Creating the client servcie web server
 commandService = Flask('commandServer')  # Creating the command web server
 
-# storagePath = None
 
 def startClientService():
     logging.info("Starting client service")
-    # clientService.debug = True
     clientService.run(host='localhost', port=sys.argv[1])
 
 def startCommandService():
     logging.info("Starting command service")
-    # commandService.debug = True
     register()
     prune (sys.argv[4])
 
@@ -36,15 +33,11 @@ def register ():
     storagePath = sys.argv[4]
 
     url = constant.namingServerUrl + constant.namingServerPort + constant.namingServerRegisterApi
-    logging.info ("register url : " + url)
     data = {"storage_ip": constant.myip,
             "client_port": sys.argv[1],
             "command_port" : sys.argv[2],
             "files" : get_file_paths(storagePath)}
 
-    # headers = {'Content-type': 'application/json'}
-    # r = requests.post(url=url, data=json.dumps(data), headers=headers)
-    # res = r.json()
     res = call_other_server (url, data)
     remove_files (res['files'], storagePath)
 
@@ -75,7 +68,6 @@ def prune(path):
         for name in dirs:
             prune_path = os.path.join(root, name)
             if os.path.isdir(prune_path) and not os.listdir(prune_path):
-                # logging.info(prune_path)
                 shutil.rmtree(prune_path)
 
 
@@ -210,8 +202,6 @@ def storageCopy():
     storage_path = sys.argv[4]
     filepath = storage_path + path
 
-    logging.info ("done with storage read")
-    logging.info (filepath)
 
     try :
         path_arr = filepath.rsplit('/', 1)
@@ -299,7 +289,6 @@ def storageRead():
     try :
         f = open(filepath,"rb")
         f.seek(offset, 0)
-        # allow_length = min(length, os.path.getsize(filepath))
         data = f.read(length)
         f.close()
 
@@ -368,8 +357,5 @@ def storageWrite():
 
 if __name__ == "__main__":
     logging.basicConfig(filename='example.log',level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
-    logging.info("check info")
-    logging.error("check error")
-    logging.debug("check debug")
     Thread(target=startClientService).start()
     startCommandService()

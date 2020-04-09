@@ -6,7 +6,6 @@ import sys
 from file_system_tree import File, FileSystem
 import requests
 import logging
-# from werkzeug import Local
 import random
 
 
@@ -15,11 +14,9 @@ namingRegister = Flask('namingRegister')  # Creating the Registration web server
 fs = FileSystem()
 
 def startNamingService():
-    # print("Starting naming service")
     namingService.run(host='localhost', port=sys.argv[1], threaded=True)
 
 def startNamingRegister():
-    # print("Starting naming Registration")
     namingRegister.run(host='localhost', port=sys.argv[2])
 
 
@@ -39,6 +36,9 @@ def make_register_response(content, status_code):
     )
     return response
 
+def create_url_helper (server_ip, server_port, api):
+    url = "http://" + server_ip + ":" + str(server_port) + api
+    return url
 
 @namingService.route('/is_valid_path', methods=['POST'])
 def isValidPath():
@@ -170,17 +170,15 @@ def createFile():
         response = make_response(content, 200)
         return response
 
-    fs.insert(path) ## ip, port?? which storage server to assign
+    fs.insert(path)
     constant.boolReturn["success"] = True
     content = json.dumps(constant.boolReturn)
     response = make_response(content, 200)
 
     server_id = random.randint(0, len(constant.storageServers) - 1);
-
-    ip = constant.storageServers[server_id]['storage_ip'] # round robin or random number generator??
+    ip = constant.storageServers[server_id]['storage_ip']
     port = constant.storageServers[server_id]['command_port']
-    logging.info("here before url")
-    url = "http://localhost:" + str(port) + "/storage_create"
+    url = create_url_helper (ip, port, "/storage_create")
     headers = {'Content-type': 'application/json'}
     data = {"path" : path}
     requests.post(url=url, data=json.dumps(data), headers=headers) #check result ??
@@ -257,20 +255,16 @@ def deleteFiles():
 
 
     if path in constant.ReplicatedFiles:
-        logging.info("Second command")
         deleteFiles = {'path' : None}
         deleteFiles['path'] = path
-        url = "http://localhost:" + str(constant.ReplicatedFiles[path]['port']) + "/storage_delete"
-        logging.info("Second url " + url)
-        # del constant.ReplicatedFiles[path]
+        url = create_url_helper (constant.ReplicatedFiles[path]['ip'], constant.ReplicatedFiles[path]['port'], "/storage_delete" )
         headers = {'Content-type': 'application/json'}
         requests.post(url=url, data=json.dumps(deleteFiles), headers=headers)
 
     owners = fs.returnFileOwner(path)
     for owner in owners:
         host_ip, host_clientport, host_commandport = owner["ip"], owner["clientport"], owner["commandport"]
-        url = "http://localhost:" + str(host_commandport) + "/storage_delete"
-        logging.info("First url " + url)
+        url = create_url_helper (host_ip, host_commandport, "/storage_delete")
         headers = {'Content-type': 'application/json'}
         data = {"path" : path}
         requests.post(url=url, data=json.dumps(data), headers=headers)
@@ -324,13 +318,9 @@ def lockPath():
                     constant.ReplicatedFiles[path]['ip'] = server['storage_ip']
                     constant.ReplicatedFiles[path]['port'] = server['command_port']
 
-            # ip = constant.storageServers[1]['storage_ip'] # round robin or random number generator??
-            # port = constant.storageServers[1]['command_port']
-            # host_ip = constant.storageServers[0]['storage_ip']
-            # host_port = constant.storageServers[0]['command_port']
             for owner in owners:
                 host_ip, host_clientport, host_commandport = owner["ip"], owner["clientport"], owner["commandport"]
-                url = "http://localhost:" + str(port) + "/storage_copy"
+                url = create_url_helper (host_ip ,port, "/storage_copy")
                 headers = {'Content-type': 'application/json'}
                 data = {"path" : path, "server_ip": host_ip, "server_port": host_clientport}
                 requests.post(url=url, data=json.dumps(data), headers=headers)
@@ -344,7 +334,7 @@ def lockPath():
     if exclusive == True and path in constant.ReplicatedFiles:
         deleteFiles = {'path' : None}
         deleteFiles['path'] = path
-        url = "http://localhost:" + str(constant.ReplicatedFiles[path]['port']) + "/storage_delete"
+        url = create_url_helper (constant.ReplicatedFiles[path]['ip'], constant.ReplicatedFiles[path]['port'], "/storage_delete")
         # del constant.ReplicatedFiles[path]
         headers = {'Content-type': 'application/json'}
         requests.post(url=url, data=json.dumps(deleteFiles), headers=headers)
@@ -435,11 +425,10 @@ def register():
         if node:
             deleteFiles['files'].append(reqFile)
         else:
-            print("inserting ", reqFile)
             fs.insert(reqFile, ssReq['storage_ip'], ssReq['client_port'], ssReq['command_port'])
             storageServerEntry['files'].append(reqFile)
 
-    # For now simple append, later look at files and send delete command for duplicates
+
     constant.storageServers.append(storageServerEntry)
     content = json.dumps(deleteFiles)
     response = make_register_response(content, 200)

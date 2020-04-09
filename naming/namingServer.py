@@ -263,12 +263,14 @@ def deleteFiles():
         headers = {'Content-type': 'application/json'}
         requests.post(url=url, data=json.dumps(deleteFiles), headers=headers)
 
-    host_ip, host_clientport, host_commandport = fs.returnFileOwner(path)
-    url = "http://localhost:" + str(host_commandport) + "/storage_delete"
-    logging.info("First url " + url)
-    headers = {'Content-type': 'application/json'}
-    data = {"path" : path}
-    requests.post(url=url, data=json.dumps(data), headers=headers)
+    owners = fs.returnFileOwner(path)
+    for owner in owners:
+        host_ip, host_clientport, host_commandport = owner["ip"], owner["clientport"], owner["commandport"]
+        url = "http://localhost:" + str(host_commandport) + "/storage_delete"
+        logging.info("First url " + url)
+        headers = {'Content-type': 'application/json'}
+        data = {"path" : path}
+        requests.post(url=url, data=json.dumps(data), headers=headers)
 
     data = {"success" : True}
     content =  json.dumps(data)
@@ -308,12 +310,12 @@ def lockPath():
                 constant.ReplicatedFiles[path] = dict()
 
             #Call copy from here
-
-            host_ip, host_clientport, host_commandport = fs.returnFileOwner(path)
+            owners = fs.returnFileOwner(path)
+            host_ip, host_clientport, host_commandport = owners[0]["ip"], owners[0]["clientport"], owners[0]["commandport"]
             ip = None
             port = None
             for server in constant.storageServers:
-                if server['storage_ip'] != host_ip or server['command_port'] != host_clientport:
+                if server['storage_ip'] != host_ip or server['command_port'] != host_commandport:
                     ip = server['storage_ip']
                     port = server['command_port']
                     constant.ReplicatedFiles[path]['ip'] = server['storage_ip']
@@ -323,10 +325,12 @@ def lockPath():
             # port = constant.storageServers[1]['command_port']
             # host_ip = constant.storageServers[0]['storage_ip']
             # host_port = constant.storageServers[0]['command_port']
-            url = "http://localhost:" + str(port) + "/storage_copy"
-            headers = {'Content-type': 'application/json'}
-            data = {"path" : path, "server_ip": host_ip, "server_port": host_clientport}
-            requests.post(url=url, data=json.dumps(data), headers=headers)
+            for owner in owners:
+                host_ip, host_clientport, host_commandport = owner["ip"], owner["clientport"], owner["commandport"]
+                url = "http://localhost:" + str(port) + "/storage_copy"
+                headers = {'Content-type': 'application/json'}
+                data = {"path" : path, "server_ip": host_ip, "server_port": host_clientport}
+                requests.post(url=url, data=json.dumps(data), headers=headers)
 
 
     timestamp = random()

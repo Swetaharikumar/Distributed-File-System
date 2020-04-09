@@ -10,6 +10,8 @@ class File(object):
         self.name = name
         self.isFile = True
         self.value = -1
+        self.owners = []
+        self.owners.append({"ip": ip, "clientport" : clientport, "commandport" : commandport})
         self.ip = ip
         self.clientport = clientport
         self.commandport = commandport
@@ -60,7 +62,8 @@ class FileSystem(object):
             if name not in cur.map:
                 cur.map[name] = File(name, ip, clientport, commandport)
                 cur.isFile = False
-
+            else:
+                cur.map[name].owners.append({"ip": ip, "clientport" : clientport, "commandport" : commandport})
             cur = cur.map[name]
         return
 
@@ -93,7 +96,8 @@ class FileSystem(object):
             if name not in cur.map:
                 return None
             cur = cur.map[name]
-        return cur.ip, cur.clientport, cur.commandport
+        return cur.owners
+        # return cur.ip, cur.clientport, cur.commandport
 
     def lockPath(self, path, exclusive, timestamp):
         cur = self.root

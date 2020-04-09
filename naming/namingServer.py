@@ -6,8 +6,9 @@ import sys
 from file_system_tree import File, FileSystem
 import requests
 import logging
-from werkzeug import Local
-from random import random
+# from werkzeug import Local
+import random
+
 
 namingService = Flask('namingServer')  # Creating the Service web server
 namingRegister = Flask('namingRegister')  # Creating the Registration web server
@@ -174,8 +175,10 @@ def createFile():
     content = json.dumps(constant.boolReturn)
     response = make_response(content, 200)
 
-    ip = constant.storageServers[0]['storage_ip'] # round robin or random number generator??
-    port = constant.storageServers[0]['command_port']
+    server_id = random.randint(0, len(constant.storageServers) - 1);
+
+    ip = constant.storageServers[server_id]['storage_ip'] # round robin or random number generator??
+    port = constant.storageServers[server_id]['command_port']
     logging.info("here before url")
     url = "http://localhost:" + str(port) + "/storage_create"
     headers = {'Content-type': 'application/json'}
@@ -240,7 +243,7 @@ def deleteFiles():
     node  = fs.get(path)
     if not node:
         constant.exceptionReturn["exception_type"] = "FileNotFoundException"
-        constant.exceptionReturn["exception_info"] = "path cannot be found"
+        constant.exceptionReturn["exception_info"] = "[delete_file] path cannot be found"
         content =  json.dumps(constant.exceptionReturn)
         response = make_response(content, 404)
         return response
@@ -333,7 +336,7 @@ def lockPath():
                 requests.post(url=url, data=json.dumps(data), headers=headers)
 
 
-    timestamp = random()
+    timestamp = random.random()
     constant.q.put(timestamp) 
     
     success = fs.lockPath(path, exclusive, timestamp)
@@ -393,50 +396,6 @@ def unlockPath():
     response = make_response(content, 404)
     return response
 
-"""
-def createHelper(path, createDir = None):
-    if not isValidPathHelper(path):
-        constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
-        constant.exceptionReturn["exception_info"] = "[create_file / create_directory] given path is invalid"
-        content =  json.dumps(constant.exceptionReturn)
-        response = make_response(content, 404)
-        return response
-
-    parent_path = path.rsplit('/', 1)[0]
-    parent_node = fs.get(parent_path)
-    # Reject when parent directory does not exist | parent dir is a file
-    if not parent_node or parent_node.isFile:
-        constant.exceptionReturn["exception_type"] = "FileNotFoundException"
-        constant.exceptionReturn["exception_info"] = "[create_file / create_directory] File/path cannot be found."
-        content =  json.dumps(constant.exceptionReturn)
-        response = make_response(content, 404)
-        return response
-
-    cur_node = fs.get(path)
-    # Return false when file already exists
-    if cur_node:
-        constant.boolReturn["success"] = False
-        content = json.dumps(constant.boolReturn)
-        response = make_response(content, 200)
-        return response
-
-    fs.insert(path) ## ip, port?? which storage server to assign
-    constant.boolReturn["success"] = True
-    content = json.dumps(constant.boolReturn)
-    response = make_response(content, 200)
-    if createDir:
-        node = fs.get(path)
-        node.isFile = False
-    else:
-        ip = constant.storageServers[0]['storage_ip'] # round robin or random number generator??
-        port = constant.storageServers[0]['command_port']
-        logging.info("here before url")
-        url = "http://localhost:" + str(port) + "/storage_create"
-        headers = {'Content-type': 'application/json'}
-        data = {"path" : path}
-        requests.post(url=url, data=json.dumps(data), headers=headers) #check result ??
-    return response
-"""
 
 def isValidPathHelper (path):
     if not path or ':' in path or path[0] != '/':
@@ -489,7 +448,7 @@ def register():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='example.log',level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+    logging.basicConfig(filename='example_naming.log',level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
     Thread(target=startNamingRegister).start()
     startNamingService()
 

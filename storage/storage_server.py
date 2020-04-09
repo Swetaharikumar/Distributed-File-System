@@ -18,12 +18,15 @@ commandService = Flask('commandServer')  # Creating the command web server
 
 def startClientService():
     logging.info("Starting client service")
+    # clientService.debug = True
     clientService.run(host='localhost', port=sys.argv[1])
 
 def startCommandService():
     logging.info("Starting command service")
+    # commandService.debug = True
     register()
     prune (sys.argv[4])
+
     commandService.run(host='localhost', port=sys.argv[2])
 
 
@@ -32,17 +35,24 @@ def register ():
     constant.namingServerPort = sys.argv[3]
     storagePath = sys.argv[4]
 
-    url = constant.namingServerUrl + constant.namingServerPort + constant.namingServerRegister
+    url = constant.namingServerUrl + constant.namingServerPort + constant.namingServerRegisterApi
+    logging.info ("register url : " + url)
     data = {"storage_ip": constant.myip,
             "client_port": sys.argv[1],
             "command_port" : sys.argv[2],
             "files" : get_file_paths(storagePath)}
 
+    # headers = {'Content-type': 'application/json'}
+    # r = requests.post(url=url, data=json.dumps(data), headers=headers)
+    # res = r.json()
+    res = call_other_server (url, data)
+    remove_files (res['files'], storagePath)
+
+def call_other_server (url, data):
     headers = {'Content-type': 'application/json'}
     r = requests.post(url=url, data=json.dumps(data), headers=headers)
     res = r.json()
-
-    remove_files (res['files'], storagePath)
+    return res
 
 
 def get_file_paths(path):
@@ -159,6 +169,74 @@ def storageCreate():
 
     response = make_command_response(json.dumps(constant.boolReturn), 200)
     return response
+
+
+@commandService.route('/storage_copy', methods=['POST'])
+def storageCopy():
+    pathJson = request.get_json()
+    path = pathJson["path"]
+    server_ip = pathJson["server_ip"]
+    server_port = pathJson["server_port"]
+
+    if not isValidPathHelper(path):
+        constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
+        constant.exceptionReturn["exception_info"] = "[storage_copy] given path is invalid"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_command_response(content, 404)
+        return response
+
+    url = create_url_helper (server_ip, server_port, constant.storage_size_api)
+    data = {"path": path}
+    size_res = call_other_server (url, data)
+
+
+    if ('exception_type' in size_res and size_res['exception_type'] == "FileNotFoundException") or \
+            ('success' in size_res and size_res['success'] == False):
+        constant.exceptionReturn["exception_type"] = "FileNotFoundException"
+        constant.exceptionReturn["exception_info"] = "[storage_copy] given path is directory / doesn't exist"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_command_response(content, 404)
+        return response
+
+    offset = 0
+    url = create_url_helper (server_ip, server_port, constant.storage_read_api)
+    data = {"path": path,
+            "offset" : offset,
+            "length": size_res["size"]}
+    read_res = call_other_server (url, data)
+
+
+    encoded_data = read_res["data"]
+    storage_path = sys.argv[4]
+    filepath = storage_path + path
+
+    logging.info ("done with storage read")
+    logging.info (filepath)
+
+    try :
+        path_arr = filepath.rsplit('/', 1)
+        dir_path = path_arr[0]
+        os.makedirs(dir_path, exist_ok=True)
+
+        data = base64.b64decode(encoded_data)
+        f = open(filepath, 'wb')
+        f.seek(offset, offset)
+        f.write(data)
+        f.close()
+
+        constant.boolReturn["success"] = True
+        response = make_command_response (json.dumps(constant.boolReturn), 200)
+    except:
+        constant.exceptionReturn["exception_type"] = "IOException"
+        constant.exceptionReturn["exception_info"] = "[storage_copy] IOException"
+        content =  json.dumps(constant.exceptionReturn)
+        response = make_command_response (content, 404)
+
+    return response
+
+def create_url_helper (server_ip, server_port, api):
+    url = "http://" + server_ip + ":" + str(server_port) + api
+    return url
 
 
 @clientService.route('/storage_size', methods=['POST'])

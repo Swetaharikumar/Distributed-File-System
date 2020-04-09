@@ -6,19 +6,30 @@ sys.stdout = open("debugFileTree.txt", 'w')
 
 class File(object):
     def __init__(self, name, ip=None, clientport=None, commandport=None):
+        """
+        File class constructor
+        :param name: str
+        :param ip: str
+        :param clientport: int
+        :param commandport: int
+        """
         self.map = defaultdict(File)
         self.name = name
         self.isFile = True
         self.value = -1
         self.owners = []
-        self.owners.append({"ip": ip, "clientport" : clientport, "commandport" : commandport})
-        self.ip = ip
         self.clientport = clientport
         self.commandport = commandport
+        self.owners.append({"ip": ip, "clientport" : clientport, "commandport" : commandport})
+        self.ip = ip
         self.locked = False
         self.exclusive = False
 
     def to_string(self):
+        """
+        Helper to print file object as string
+        :return: str
+        """
         out = ""
         for k, v in self.map.items():
             out = out + v.name + "  "
@@ -27,11 +38,15 @@ class File(object):
 class FileSystem(object):
 
     def __init__(self):
+        """
+        Construtor for FileSystem object. This is a trie data structure
+        """
         self.root = File("/")
         self.root.isFile = False
 
     def search(selfself, path):
         """
+        Searches the trie for the given path
         :type path: str
         :rtype: bool
         """
@@ -50,8 +65,12 @@ class FileSystem(object):
 
     def insert(self, path, ip=None, clientport=None, commandport = None):
         """
-        :type path: str
-        :rtype: void
+        Inserts a new entry into FileSystem trie
+        :param path: str
+        :param ip: str
+        :param clientport: int
+        :param commandport: int
+        :return:
         """
         array = path.split("/")
         cur = self.root
@@ -67,8 +86,13 @@ class FileSystem(object):
             cur = cur.map[name]
         return
 
-    # Returns the File object
+
     def get(self, path):
+        """
+        Given path, searches the FileSystem trie and returns the File object
+        :param path: str
+        :return: object
+        """
         cur = self.root
         if (path == "/" or path == "//" or path == ''):
             return cur
@@ -84,6 +108,11 @@ class FileSystem(object):
         return cur
 
     def returnFileOwner(self, path):
+        """
+        Gicen the path, returns the list of owners of that file
+        :param path: str
+        :return: list
+        """
         cur = self.root
         if (path == "/" or path == "//" or path == ''):
             return cur.ip,cur.port
@@ -97,9 +126,16 @@ class FileSystem(object):
                 return None
             cur = cur.map[name]
         return cur.owners
-        # return cur.ip, cur.clientport, cur.commandport
+
 
     def lockPath(self, path, exclusive, timestamp):
+        """
+        Locks the given path
+        :param path: str
+        :param exclusive: bool
+        :param timestamp: int
+        :return: bool
+        """
         cur = self.root
         while timestamp != constant.q.queue[0]:
             continue
@@ -122,9 +158,6 @@ class FileSystem(object):
             if name == '':
                 continue
             cur = cur.map[name]
-            # if cur.exclusive == True:
-            #     return False
-            logging.info("locked" + cur.name)
             cur.locked = True
             cur.exclusive = False
         cur.exclusive = exclusive
@@ -133,12 +166,15 @@ class FileSystem(object):
 
 
     def unlockPath(self, path, exclusive):
+        """
+        Unlocks the given path
+        :param path: str
+        :param exclusive: bool
+        :return: bool
+        """
         cur = self.root
 
         if (path == "/" or path == "//"):
-            # if cur.exclusive != exclusive:
-            #     return False
-            logging.info("unlocked" + cur.name)
             cur.locked = False
             cur.exclusive = False
 

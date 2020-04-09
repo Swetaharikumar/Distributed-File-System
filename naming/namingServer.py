@@ -21,6 +21,12 @@ def startNamingRegister():
 
 
 def make_response(content, status_code):
+    """
+    Helper to form response of naming service
+    :param content: str
+    :param status_code: int
+    :return: object
+    """
     response = namingService.response_class(
         response=content,
         status=status_code,
@@ -29,6 +35,12 @@ def make_response(content, status_code):
     return response
 
 def make_register_response(content, status_code):
+    """
+    Helper to form response of naming server's register service
+    :param content: str
+    :param status_code: int
+    :return: object
+    """
     response = namingRegister.response_class(
         response=content,
         status=status_code,
@@ -37,11 +49,22 @@ def make_register_response(content, status_code):
     return response
 
 def create_url_helper (server_ip, server_port, api):
+    """
+    Helper to form url given ip, port and api path
+    :param server_ip: str
+    :param server_port: int
+    :param api: str
+    :return: str
+    """
     url = "http://" + server_ip + ":" + str(server_port) + api
     return url
 
 @namingService.route('/is_valid_path', methods=['POST'])
 def isValidPath():
+    """
+    Handler for is_valid_path api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
 
@@ -57,6 +80,10 @@ def isValidPath():
 
 @namingService.route('/getstorage', methods=['POST'])
 def getStorage():
+    """
+    Handler for /getstorage api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
 
@@ -85,9 +112,14 @@ def getStorage():
 
 @namingService.route('/list', methods=['POST'])
 def list():
+    """
+    Handler for /list api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
 
+    # Not a valid path
     if not isValidPathHelper (path):
         constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
         constant.exceptionReturn["exception_info"] = "given path is invalid"
@@ -95,6 +127,7 @@ def list():
         response = make_response(content, 404)
         return response
 
+    # File not found
     node  = fs.get(path)
     if not node or node.isFile:
         constant.exceptionReturn["exception_type"] = "FileNotFoundException"
@@ -109,7 +142,6 @@ def list():
         if k not in filesReturn['files']:
             filesReturn['files'].append(k)
 
-    # constant.filesReturn['files'] = list(set(filesReturn['files']))
     content = json.dumps(filesReturn)
     response = make_response(content, 200)
     return response
@@ -117,6 +149,10 @@ def list():
 
 @namingService.route('/is_directory', methods=['POST'])
 def isDirectory():
+    """
+    Handler for /is_directory api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
 
@@ -143,6 +179,10 @@ def isDirectory():
 
 @namingService.route('/create_file', methods=['POST'])
 def createFile():
+    """
+    Handler for /create_file api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
     if not isValidPathHelper(path):
@@ -188,6 +228,11 @@ def createFile():
 
 @namingService.route('/create_directory', methods=['POST'])
 def createDir():
+    """
+    Handler for /create_directory. Creates new directory at the
+    given path.
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
 
@@ -216,7 +261,7 @@ def createDir():
         response = make_response(content, 200)
         return response
 
-    fs.insert(path) ## ip, port?? which storage server to assign
+    fs.insert(path)
     node = fs.get(path)
     node.isFile = False
 
@@ -229,9 +274,13 @@ def createDir():
 
 @namingService.route('/delete', methods=['POST'])
 def deleteFiles():
+    """
+    Handler for /delete api. Deletes all replicas of given file.
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
-    logging.info("Delete")
+
     if not isValidPathHelper(path):
         constant.exceptionReturn["exception_type"] = "IllegalArgumentException"
         constant.exceptionReturn["exception_info"] = "[delete file] given path is invalid"
@@ -277,6 +326,10 @@ def deleteFiles():
 
 @namingService.route('/lock', methods=['POST'])
 def lockPath():
+    """
+    Handler for /lock api. Locks the given file.
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
 
@@ -355,6 +408,10 @@ def lockPath():
 
 @namingService.route('/unlock', methods=['POST'])
 def unlockPath():
+    """
+    Handler for /unlock api. Unlocks the file given filepath
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
 
@@ -387,6 +444,11 @@ def unlockPath():
 
 
 def isValidPathHelper (path):
+    """
+    Helper for validating path.
+    :param path: str
+    :return: bool
+    """
     if not path or ':' in path or path[0] != '/':
         return False
     else:
@@ -395,6 +457,11 @@ def isValidPathHelper (path):
 
 @namingRegister.route('/register', methods = ['POST'])
 def register():
+    """
+    Handler for registering storage server.
+    Called by storage servers to register themselves.
+    :return: object
+    """
     ssReq = request.get_json()
     storageServerEntry = {"storage_ip": ssReq['storage_ip'],
                           "client_port": ssReq['client_port'],

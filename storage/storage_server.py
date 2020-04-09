@@ -16,10 +16,19 @@ commandService = Flask('commandServer')  # Creating the command web server
 
 
 def startClientService():
+    """
+    Starts client service
+    :return: void
+    """
     logging.info("Starting client service")
     clientService.run(host='localhost', port=sys.argv[1])
 
 def startCommandService():
+    """
+    Starts command service. Registers the storage server
+    and prunes the directories if neccessary
+    :return: void
+    """
     logging.info("Starting command service")
     register()
     prune (sys.argv[4])
@@ -29,6 +38,10 @@ def startCommandService():
 
 # call naming server's register api
 def register ():
+    """
+    Helper for registering with naming server
+    :return: void
+    """
     constant.namingServerPort = sys.argv[3]
     storagePath = sys.argv[4]
 
@@ -42,6 +55,12 @@ def register ():
     remove_files (res['files'], storagePath)
 
 def call_other_server (url, data):
+    """
+    Helper for http call of other servers
+    :param url: str
+    :param data: object
+    :return: object
+    """
     headers = {'Content-type': 'application/json'}
     r = requests.post(url=url, data=json.dumps(data), headers=headers)
     res = r.json()
@@ -49,13 +68,24 @@ def call_other_server (url, data):
 
 
 def get_file_paths(path):
+    """
+    Helper for searching given file in local file system
+    :param path: str
+    :return: list
+    """
     file_paths = []
     for root, dirs, files in os.walk(path, topdown=False):
         for name in files:
             file_paths.append(os.path.join(root, name)[len(path):])
     return file_paths
 
+
 def prune(path):
+    """
+    Prunes the empty directories in the given path
+    :param path: str
+    :return: void
+    """
     file_paths = []
     for root, dirs, files in os.walk(path, topdown=False):
         for name in files:
@@ -73,6 +103,12 @@ def prune(path):
 
 
 def remove_files(filepaths, storagePath):
+    """
+    Removes the given list of files from local file system
+    :param filepaths: list
+    :param storagePath: str
+    :return: void
+    """
     for fp in filepaths:
         path = storagePath + fp
         if os.path.isfile(path):
@@ -82,6 +118,12 @@ def remove_files(filepaths, storagePath):
 
 
 def make_client_response(content, status_code):
+    """
+    Helper for creating response object for client service
+    :param content:
+    :param status_code:
+    :return:
+    """
     response = clientService.response_class(
         response=content,
         status=status_code,
@@ -90,6 +132,12 @@ def make_client_response(content, status_code):
     return response
 
 def make_command_response(content, status_code):
+    """
+    Helper for creating response object for command service
+    :param content: object
+    :param status_code: int
+    :return: object
+    """
     response = commandService.response_class(
         response=content,
         status=status_code,
@@ -98,6 +146,11 @@ def make_command_response(content, status_code):
     return response
 
 def isValidPathHelper (path):
+    """
+    Helper for validating the path
+    :param path: str
+    :return: bool
+    """
     if not path or ':' in path or path[0] != '/':
         return False
     else:
@@ -106,6 +159,10 @@ def isValidPathHelper (path):
 
 @commandService.route('/storage_delete', methods=['POST'])
 def storageDelete():
+    """
+    Handler for storage_delete api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
     storage_path = sys.argv[4]
@@ -132,6 +189,10 @@ def storageDelete():
 
 @commandService.route('/storage_create', methods=['POST'])
 def storageCreate():
+    """
+    Handler for storage_create api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
     storagePath = sys.argv[4]
@@ -165,6 +226,10 @@ def storageCreate():
 
 @commandService.route('/storage_copy', methods=['POST'])
 def storageCopy():
+    """
+    Handler for storage_copy api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
     server_ip = pathJson["server_ip"]
@@ -231,6 +296,10 @@ def create_url_helper (server_ip, server_port, api):
 
 @clientService.route('/storage_size', methods=['POST'])
 def storageSize():
+    """
+    Handler for storage_size api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
     storagePath = sys.argv[4]
@@ -257,6 +326,10 @@ def storageSize():
 
 @clientService.route('/storage_read', methods=['POST'])
 def storageRead():
+    """
+    Handler for storage_read api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
     offset = pathJson["offset"]
@@ -307,6 +380,10 @@ def storageRead():
 
 @clientService.route('/storage_write', methods=['POST'])
 def storageWrite():
+    """
+    Handler for storage_write api
+    :return: object
+    """
     pathJson = request.get_json()
     path = pathJson["path"]
     offset = pathJson["offset"]

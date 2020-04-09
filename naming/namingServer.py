@@ -1,3 +1,7 @@
+"""
+APIs and their helpers for naming server
+Uses Flask module for REST API framework
+"""
 import consts as constant
 from flask import Flask, request, jsonify
 from threading import Thread

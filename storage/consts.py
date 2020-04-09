@@ -1,3 +1,8 @@
+"""
+constants file for storage server
+Contains global variables
+"""
+
 namingServerUrl = "http://localhost:"
 namingServerPort = None
 namingServerRegisterApi = "/register"

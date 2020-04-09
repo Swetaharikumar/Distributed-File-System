@@ -1,3 +1,9 @@
+"""
+Main structure for holding files and its metadata
+Underlying data structure is Trie.
+It can be traversed using filepath
+"""
+
 from collections import defaultdict
 import logging
 import sys

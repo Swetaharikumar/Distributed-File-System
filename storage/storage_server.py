@@ -1,3 +1,7 @@
+"""
+APIs and their helpers for storage server
+Uses Flask module for REST API framework
+"""
 from flask import Flask, request, jsonify
 from threading import Thread
 import json

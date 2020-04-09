@@ -1,5 +1,9 @@
 # Global constants file
 from typing import Dict, Any
+"""
+constants file for naming server
+Contains global variables
+"""
 import queue
 
 boolReturn = {"success": None}

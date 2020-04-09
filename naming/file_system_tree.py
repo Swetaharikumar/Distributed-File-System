@@ -101,7 +101,6 @@ class FileSystem(object):
 
     def lockPath(self, path, exclusive, timestamp):
         cur = self.root
-        # if (path == "/" or path == "//" or path == ''):
         while timestamp != constant.q.queue[0]:
             continue
         while cur.exclusive == True:

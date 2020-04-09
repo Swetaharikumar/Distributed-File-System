@@ -335,11 +335,10 @@ def lockPath():
                 data = {"path" : path, "server_ip": host_ip, "server_port": host_clientport}
                 requests.post(url=url, data=json.dumps(data), headers=headers)
 
-
-    timestamp = random.random()
-    constant.q.put(timestamp) 
+    constant.lockId +=1
+    constant.q.put(constant.lockId) 
     
-    success = fs.lockPath(path, exclusive, timestamp)
+    success = fs.lockPath(path, exclusive, constant.lockId)
     
     if exclusive == True and path in constant.ReplicatedFiles:
         deleteFiles = {'path' : None}

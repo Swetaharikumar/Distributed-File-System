@@ -15,6 +15,7 @@ storageServers = []
 filesDict: Dict[Any, Any] = {}
 # queue of lock requests
 q = queue.Queue()
+lockId = 0
 
 # Maintains access count for shared locks
 AccessCount = dict()

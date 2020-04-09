@@ -37,6 +37,7 @@ all-classes :
 # Run conformance tests.
 .PHONY : test
 test : all-classes
+	pip3 install flask --user
 	java -cp ".$(CPSEPARATOR)$(JARFILE)" test.ConformanceTests
 
 .PHONY : checkpoint
